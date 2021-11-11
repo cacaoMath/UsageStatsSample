@@ -76,6 +76,11 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * cal: 現在より前の指定したい日，
+     * return : このメソッドを呼び出した今現在までのアプリ使用履歴を含んだEventStatsのリスト
+     */
+
     private fun getAppEventStats(beginCal: Calendar): MutableList<EventStats>? {
         val usageStatsManager =
             getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
@@ -84,6 +89,9 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * UsageStatsの一覧のログ表示と，csv出力を行う．
+     */
     private fun showAppUsageStatsLog(beginCal : Calendar) {
         val strWriter = StringWriter()
         val beanWriter = StatefulBeanToCsvBuilder<UsageStatsData>(strWriter).build()
@@ -117,16 +125,20 @@ class MainActivity : AppCompatActivity() {
         try {
             File(
                 this.filesDir, ///保存場所は　data/data/[package_name]/files/
-                "output_${beginCal.timeInMillis}_${System.currentTimeMillis()}.txt"
-                //output_範囲のはじめ_書き込み処理を行った時間.txtの形式
+                "usageStats_${beginCal.timeInMillis}_${System.currentTimeMillis()}.txt"
+                //usageStats_範囲のはじめ_書き込み処理を行った時間.txtの形式
             ).writeText(strWriter.toString())
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
-
+    /**
+     * UsageStatsの一覧のログ表示と，csv出力を行う．
+     */
     private fun showAppEventStatsLog(beginCal : Calendar){
+        val strWriter = StringWriter()
+        val beanWriter = StatefulBeanToCsvBuilder<EventStatsData>(strWriter).build()
         getAppEventStats(beginCal)?.let{list->
             list.forEach{
                 Log.i(TAG,"""
@@ -135,8 +147,27 @@ class MainActivity : AppCompatActivity() {
                         firstTimeStamp : ${it.firstTimeStamp}
                         lastTimeVisible : ${it.lastTimeStamp}
                         """.trimIndent())
+                beanWriter.write(
+                    EventStatsData(
+                        it.count,
+                        it.eventType,
+                        it.firstTimeStamp,
+                        it.lastEventTime,
+                        it.lastTimeStamp,
+                        it.totalTime)
+                )
 
             }
+        }
+
+        try {
+            File(
+                this.filesDir, ///保存場所は　data/data/[package_name]/files/
+                "eventStats_${beginCal.timeInMillis}_${System.currentTimeMillis()}.txt"
+                //eventStats_範囲のはじめ_書き込み処理を行った時間.txtの形式
+            ).writeText(strWriter.toString())
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 
